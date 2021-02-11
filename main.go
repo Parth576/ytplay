@@ -62,9 +62,6 @@ func main() {
 		fmt.Println("Youtube API key saved!")
 		os.Exit(1)
 	}
-	//err := godotenv.Load()
-	//PrintErr(err)
-	//apiKey := os.Getenv("YOUTUBE_API_KEY")
 
 	cachePath := filepath.Join(homedir, "ytplay.cache")
 	tmpFilepath := filepath.Join(cachePath, "tmp.mp3")
@@ -77,8 +74,10 @@ func main() {
 	argList := os.Args[1:]
 	if len(argList) == 0 {
 		fmt.Println("Please give keyword to search")
+		os.Exit(1)
 	} else if len(argList) > 1 {
-		fmt.Printf("Only 1 argument required but %v arguments provided", len(argList))
+		fmt.Printf("Only 1 argument required but %v arguments provided\n", len(argList))
+		os.Exit(1)
 	}
 
 	url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=%s&type=video&key=%s", argList[0], apiKey)
@@ -97,37 +96,32 @@ func main() {
 		var index int
 		fmt.Printf("\n%sEnter choice > %s", colors.Yellow, colors.Reset)
 		fmt.Scanln(&index)
-		//fmt.Println(idMap)
-		videoUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
-		//fmt.Println(videoUrl)
-		//output, err := exec.Command("youtube-dl", "-x", "--audio-format", "mp3", videoUrl, "-o", cachePath).Output()
-		//PrintErr(err)
-		//fmt.Println(string(output))
-		//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
 
+		//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
+		videoUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
+
+		// execute youtube-dl command
 		ytdlExecutable, err := exec.LookPath("youtube-dl")
 		if err != nil {
 			fmt.Println("Please install youtube-dl")
 			fmt.Println(err)
 		}
-
 		command := &exec.Cmd{
 			Path:   ytdlExecutable,
 			Args:   []string{ytdlExecutable, "-x", "--audio-format", "mp3", videoUrl, "-o", tmpFilepath},
 			Stdout: os.Stdout,
 			Stdin:  os.Stdout,
 		}
-
 		if err = command.Run(); err != nil {
 			fmt.Println(err)
 		}
 
+		// execute ffplay command
 		ffplayExec, err := exec.LookPath("ffplay")
 		if err != nil {
 			fmt.Println("Please install ffmpeg for the ffplay command")
 			fmt.Println(err)
 		}
-
 		playCmd := exec.Cmd{
 			Path:   ffplayExec,
 			Args:   []string{ffplayExec, tmpFilepath, "-nodisp", "-autoexit"},
@@ -144,6 +138,7 @@ func main() {
 
 }
 
+// pretty print youtube API response
 func pprint(items interface{}) {
 	for index, v := range items.([]interface{}) {
 		videoMap := v.(map[string]interface{})
