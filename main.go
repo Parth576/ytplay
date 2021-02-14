@@ -5,42 +5,19 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 
 	"github.com/Parth576/ytplay/colors"
 	"github.com/spf13/viper"
 )
 
-// PrintErr prints the error to logs
-func PrintErr(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-var idMap = make(map[int]string)
-
 func main() {
 	homedir, err := os.UserHomeDir()
 	PrintErr(err)
 
-	configPath := filepath.Join(homedir, ".ytplay.yaml")
-	if _, err = os.Stat(configPath); os.IsNotExist(err) {
-		file, err := os.Create(configPath)
-		PrintErr(err)
-		defer file.Close()
-	}
-	viper.SetConfigFile(configPath)
-	if err = viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("Could not find config file at " + configPath)
-		}
-	}
-	viper.WriteConfig()
+	InitConfig(homedir)
 
 	apiKey := viper.GetString("YOUTUBE_API_KEY")
 
@@ -48,20 +25,7 @@ func main() {
 	flag.StringVar(&keyFlag, "key", "", "Set Youtube API key")
 	flag.Parse()
 
-	if apiKey == "" && keyFlag == "" {
-		fmt.Println("Youtube API key not set, please generate API key from https://console.developers.google.com")
-		fmt.Println("And then run the command:")
-		fmt.Println("ytplay -key=<your-api-key>")
-		os.Exit(1)
-	}
-
-	if keyFlag != "" {
-		viper.Set("YOUTUBE_API_KEY", keyFlag)
-		viper.WriteConfig()
-		apiKey = keyFlag
-		fmt.Println("Youtube API key saved!")
-		os.Exit(1)
-	}
+	CheckAPIKey(apiKey, keyFlag)
 
 	cachePath := filepath.Join(homedir, "ytplay.cache")
 	tmpFilepath := filepath.Join(cachePath, "tmp.mp3")
@@ -92,61 +56,19 @@ func main() {
 	if res.StatusCode == 200 {
 		err = json.Unmarshal(body, &response)
 		items := response.(map[string]interface{})["items"]
-		pprint(items)
+		idMap := PrettyPrint(items)
 		var index int
 		fmt.Printf("\n%sEnter choice > %s", colors.Yellow, colors.Reset)
 		fmt.Scanln(&index)
 
 		//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
-		videoUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
+		videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
 
-		// execute youtube-dl command
-		ytdlExecutable, err := exec.LookPath("youtube-dl")
-		if err != nil {
-			fmt.Println("Please install youtube-dl")
-			fmt.Println(err)
-		}
-		command := &exec.Cmd{
-			Path:   ytdlExecutable,
-			Args:   []string{ytdlExecutable, "-x", "--audio-format", "mp3", videoUrl, "-o", tmpFilepath},
-			Stdout: os.Stdout,
-			Stdin:  os.Stdout,
-		}
-		if err = command.Run(); err != nil {
-			fmt.Println(err)
-		}
-
-		// execute ffplay command
-		ffplayExec, err := exec.LookPath("ffplay")
-		if err != nil {
-			fmt.Println("Please install ffmpeg for the ffplay command")
-			fmt.Println(err)
-		}
-		playCmd := exec.Cmd{
-			Path:   ffplayExec,
-			Args:   []string{ffplayExec, tmpFilepath, "-nodisp", "-autoexit"},
-			Stdout: os.Stdout,
-			Stdin:  os.Stdout,
-		}
-		if err = playCmd.Run(); err != nil {
-			fmt.Println(err)
-		}
+		Command("youtube-dl", videoURL, tmpFilepath)
+		Command("ffplay", "", tmpFilepath)
 
 	} else {
 		fmt.Println("Some error occurred with fetching details from the Youtube API")
 	}
 
-}
-
-// pretty print youtube API response
-func pprint(items interface{}) {
-	for index, v := range items.([]interface{}) {
-		videoMap := v.(map[string]interface{})
-		id := videoMap["id"]
-		idMap[index+1] = id.(map[string]interface{})["videoId"].(string)
-		info := videoMap["snippet"]
-		typedInfo := info.(map[string]interface{})
-		fmt.Printf("%v)  %sTitle:%s %s\n", index+1, colors.Cyan, colors.Reset, typedInfo["title"])
-		fmt.Printf("    %sChannel:%s %s\n\n", colors.Cyan, colors.Reset, typedInfo["channelTitle"])
-	}
 }
