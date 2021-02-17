@@ -5,8 +5,13 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/Parth576/ytplay/colors"
+	"github.com/spf13/viper"
 )
 
 // PrintErr prints the error to logs
@@ -44,11 +49,13 @@ func Command(params ...string) {
 
 	argList := []string{}
 
+	seekTime := viper.GetString("SEEK_TIME")
+
 	switch params[0] {
 	case "youtube-dl":
 		argList = []string{executable, "-x", "--audio-format", "mp3", params[1], "-o", params[2]}
 	case "ffplay":
-		argList = []string{executable, params[2], "-nodisp", "-autoexit"}
+		argList = []string{executable, params[2], "-nodisp", "-autoexit", "-ss", seekTime}
 	}
 
 	command := &exec.Cmd{
@@ -57,6 +64,26 @@ func Command(params ...string) {
 		Stdout: os.Stdout,
 		Stdin:  os.Stdout,
 	}
+
+	seekTimeFloat, err := strconv.ParseFloat(seekTime, 64)
+	PrintErr(err)
+
+	if params[0] == "ffplay" {
+		startTime := time.Now()
+		c := make(chan os.Signal)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-c
+			elapsed := time.Since(startTime)
+			total := elapsed.Seconds() + seekTimeFloat
+			seek := fmt.Sprintf("%f", total)
+			viper.Set("SEEK_TIME", seek)
+			viper.WriteConfig()
+			os.Exit(1)
+		}()
+	}
+
 	err = command.Run()
 	PrintErr(err)
+
 }

@@ -28,7 +28,7 @@ func CheckAPIKey(apiKey, keyFlag string) {
 	if apiKey == "" && keyFlag == "" {
 		fmt.Println("Youtube API key not set, please generate API key from https://console.developers.google.com")
 		fmt.Println("And then run the command:")
-		fmt.Println("ytplay -key=<your-api-key>")
+		fmt.Println("ytplay -key <your-api-key>")
 		os.Exit(1)
 	}
 
