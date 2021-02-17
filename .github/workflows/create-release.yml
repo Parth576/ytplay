@@ -1,12 +1,10 @@
 name: Build and create release
-
 on:
   push:
     branches:
       - release
     tags:
       - 'v*'
-
 jobs: 
   build:
     name: Create and upload release
@@ -52,6 +50,3 @@ jobs:
           asset_path: ./ytplay.exe
           asset_name: ytplay.exe
           asset_content_type: application/octet-stream
-
-
-     
