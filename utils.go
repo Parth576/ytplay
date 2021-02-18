@@ -53,7 +53,7 @@ func Command(params ...string) {
 
 	switch params[0] {
 	case "youtube-dl":
-		argList = []string{executable, "-x", "--audio-format", "mp3", params[1], "-o", params[2]}
+		argList = []string{executable, "-x", "--audio-format", "mp3", params[1], "-o", params[2], "--no-continue"}
 	case "ffplay":
 		argList = []string{executable, params[2], "-nodisp", "-autoexit", "-ss", seekTime}
 	}
