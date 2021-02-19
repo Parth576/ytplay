@@ -1,18 +1,20 @@
-package main
+package config
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/Parth576/ytplay/utils"
 	"github.com/spf13/viper"
 )
 
+// InitConfig creates the config file if it does not exist
 func InitConfig(homedir string) {
 	configPath := filepath.Join(homedir, ".ytplay.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		file, err := os.Create(configPath)
-		PrintErr(err)
+		utils.PrintErr(err)
 		defer file.Close()
 	}
 	viper.SetConfigFile(configPath)
@@ -24,6 +26,7 @@ func InitConfig(homedir string) {
 	viper.WriteConfig()
 }
 
+// CheckAPIKey checks if YT API key exists
 func CheckAPIKey(apiKey, keyFlag string) {
 	if apiKey == "" && keyFlag == "" {
 		fmt.Println("Youtube API key not set, please generate API key from https://console.developers.google.com")

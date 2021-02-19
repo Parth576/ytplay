@@ -24,4 +24,7 @@ Search and play songs right from your terminal!
 - A song stopped with ^C can be resumed by typing ```ytplay -resume```
 
 ### TODO
+- Tests
 - Creating and managing playlists
+- Use a Go audio libary like faiface/beep or oto (remove ffplay dependency)
+- Improve UI by using TUI libs

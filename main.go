@@ -10,14 +10,16 @@ import (
 	"path/filepath"
 
 	"github.com/Parth576/ytplay/colors"
+	"github.com/Parth576/ytplay/config"
+	"github.com/Parth576/ytplay/utils"
 	"github.com/spf13/viper"
 )
 
 func main() {
 	homedir, err := os.UserHomeDir()
-	PrintErr(err)
+	utils.PrintErr(err)
 
-	InitConfig(homedir)
+	config.InitConfig(homedir)
 
 	apiKey := viper.GetString("YOUTUBE_API_KEY")
 
@@ -29,7 +31,7 @@ func main() {
 
 	flag.Parse()
 
-	CheckAPIKey(apiKey, keyFlag)
+	config.CheckAPIKey(apiKey, keyFlag)
 
 	cachePath := filepath.Join(homedir, "ytplay.cache")
 	tmpFilepath := filepath.Join(cachePath, "tmp.mp3")
@@ -53,17 +55,17 @@ func main() {
 
 		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=%s&type=video&key=%s", argList[0], apiKey)
 		res, err := http.Get(url)
-		PrintErr(err)
+		utils.PrintErr(err)
 		defer res.Body.Close()
 
 		var response interface{}
 		body, err := ioutil.ReadAll(res.Body)
-		PrintErr(err)
+		utils.PrintErr(err)
 
 		if res.StatusCode == 200 {
 			err = json.Unmarshal(body, &response)
 			items := response.(map[string]interface{})["items"]
-			idMap := PrettyPrint(items)
+			idMap := utils.PrettyPrint(items)
 			var index int
 			fmt.Printf("\n%sEnter choice > %s", colors.Yellow, colors.Reset)
 			fmt.Scanln(&index)
@@ -71,8 +73,8 @@ func main() {
 			//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
 			videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
 
-			Command("youtube-dl", videoURL, tmpFilepath)
-			Command("ffplay", "", tmpFilepath)
+			utils.Command("youtube-dl", videoURL, tmpFilepath)
+			utils.Command("ffplay", "", tmpFilepath)
 
 		} else {
 			fmt.Println("Some error occurred with fetching details from the Youtube API")
@@ -82,7 +84,7 @@ func main() {
 			fmt.Println("No song played before to resume from, exiting")
 			os.Exit(1)
 		}
-		Command("ffplay", "", tmpFilepath)
+		utils.Command("ffplay", "", tmpFilepath)
 	}
 
 }
