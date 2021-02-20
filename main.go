@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Parth576/ytplay/colors"
 	"github.com/Parth576/ytplay/config"
@@ -53,7 +54,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=%s&type=video&key=%s", argList[0], apiKey)
+		searchString := strings.ReplaceAll(argList[0], " ", "")
+		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=%s&type=video&key=%s", searchString, apiKey)
 		res, err := http.Get(url)
 		utils.PrintErr(err)
 		defer res.Body.Close()
