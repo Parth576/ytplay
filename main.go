@@ -55,7 +55,7 @@ func main() {
 		}
 
 		searchString := strings.ReplaceAll(argList[0], " ", "")
-		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=%s&type=video&key=%s", searchString, apiKey)
+		url := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=%s&type=video&key=%s", searchString, apiKey)
 		res, err := http.Get(url)
 		utils.PrintErr(err)
 		defer res.Body.Close()
