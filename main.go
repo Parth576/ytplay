@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Parth576/ytplay/colors"
 	"github.com/Parth576/ytplay/config"
 	"github.com/Parth576/ytplay/utils"
 	"github.com/spf13/viper"
@@ -67,10 +66,10 @@ func main() {
 		if res.StatusCode == 200 {
 			err = json.Unmarshal(body, &response)
 			items := response.(map[string]interface{})["items"]
-			idMap := utils.PrettyPrint(items)
-			var index int
-			fmt.Printf("\n%sEnter choice > %s", colors.Yellow, colors.Reset)
-			fmt.Scanln(&index)
+			idMap, index := utils.PrettyPrint(items)
+			//var index int
+			//fmt.Printf("\n%sEnter choice > %s", colors.Yellow, colors.Reset)
+			//fmt.Scanln(&index)
 
 			//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
 			videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])

@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Parth576/ytplay/colors"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/viper"
 )
 
@@ -21,18 +21,49 @@ func PrintErr(err error) {
 	}
 }
 
-func PrettyPrint(items interface{}) map[int]string {
+type music struct {
+	Name    string
+	Channel string
+	Index   int
+}
+
+func PrettyPrint(items interface{}) (map[int]string, int) {
 	idMap := make(map[int]string)
+	var musicList = []music{}
 	for index, v := range items.([]interface{}) {
 		videoMap := v.(map[string]interface{})
 		id := videoMap["id"]
 		idMap[index+1] = id.(map[string]interface{})["videoId"].(string)
 		info := videoMap["snippet"]
 		typedInfo := info.(map[string]interface{})
-		fmt.Printf("%v)  %sTitle:%s %s\n", index+1, colors.Cyan, colors.Reset, typedInfo["title"])
-		fmt.Printf("    %sChannel:%s %s\n\n", colors.Cyan, colors.Reset, typedInfo["channelTitle"])
+		musicList = append(musicList, music{typedInfo["title"].(string), typedInfo["channelTitle"].(string), index + 1})
+		//fmt.Printf("%v)  %sTitle:%s %s\n", index+1, colors.Cyan, colors.Reset, typedInfo["title"])
+		//fmt.Printf("    %sChannel:%s %s\n\n", colors.Cyan, colors.Reset, typedInfo["channelTitle"])
 	}
-	return idMap
+
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}",
+		Active:   "\u279C {{ .Name | cyan }} ({{ .Channel | red }})",
+		Inactive: "{{ .Name | cyan }} ({{ .Channel | red }})",
+		Selected: "{{ .Name | yellow }}",
+	}
+
+	prompt := promptui.Select{
+		Label:     "Select Song",
+		Items:     musicList,
+		Templates: templates,
+		Size:      5,
+	}
+
+	index, _, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+	}
+
+	//fmt.Printf("You choose %q\n", result)
+	//fmt.Println(index)
+	return idMap, index + 1
 }
 
 func Command(params ...string) {
@@ -53,7 +84,7 @@ func Command(params ...string) {
 
 	switch params[0] {
 	case "youtube-dl":
-		argList = []string{executable, "-x", "--audio-format", "mp3", params[1], "-o", params[2], "--no-continue"}
+		argList = []string{executable, "-q", "-x", "--audio-format", "mp3", params[1], "-o", params[2], "--no-continue"}
 	case "ffplay":
 		argList = []string{executable, params[2], "-nodisp", "-autoexit", "-ss", seekTime}
 	}
