@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"syscall"
 	"time"
+    "path/filepath"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/viper"
@@ -84,7 +85,9 @@ func Command(params ...string) {
 
 	switch params[0] {
 	case "youtube-dl":
-		argList = []string{executable, "-q", "-x", "--audio-format", "mp3", params[1], "-o", params[2], "--no-continue"}
+        fp := filepath.Join(params[2],"tmp.%(ext)s")
+        fmt.Println(fp)
+		argList = []string{executable, "-q", "-x", "--audio-format", "mp3", params[1], "-o", fp, "--no-continue"}
 	case "ffplay":
 		argList = []string{executable, params[2], "-nodisp", "-autoexit", "-ss", seekTime}
 	}

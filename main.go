@@ -12,6 +12,7 @@ import (
 
 	"github.com/Parth576/ytplay/config"
 	"github.com/Parth576/ytplay/utils"
+	"github.com/Parth576/ytplay/audio"
 	"github.com/spf13/viper"
 )
 
@@ -74,8 +75,9 @@ func main() {
 			//youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=J_QGZspO4gg" -o ~/Downloads/youtubedl/bruh.mp3
 			videoURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", idMap[index])
 
-			utils.Command("youtube-dl", videoURL, tmpFilepath)
-			utils.Command("ffplay", "", tmpFilepath)
+			utils.Command("youtube-dl", videoURL, cachePath)
+			//utils.Command("ffplay", "", tmpFilepath)
+            audio.Play(tmpFilepath)
 
 		} else {
 			fmt.Println("Some error occurred with fetching details from the Youtube API")
@@ -85,7 +87,8 @@ func main() {
 			fmt.Println("No song played before to resume from, exiting")
 			os.Exit(1)
 		}
-		utils.Command("ffplay", "", tmpFilepath)
+		//utils.Command("ffplay", "", tmpFilepath)
+        audio.Play(tmpFilepath)
 	}
 
 }

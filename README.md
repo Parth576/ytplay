@@ -23,6 +23,11 @@ Search and play songs right from your terminal!
 - Ctrl+C is used for pausing/stopping the song
 - A song stopped with ^C can be resumed by typing ```ytplay -resume```
 
+## Note
+- The Youtube API has a default quota of 10k units per day
+- Each search request consumes 100 units
+- That means you can search for 100 songs per day and the quota will be reset for the next day
+
 ### TODO
 - Tests
 - Creating and managing playlists
