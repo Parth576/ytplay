@@ -11,6 +11,16 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
+func printTime(streamer beep.StreamSeekCloser, format beep.Format) {
+	for {
+		select {
+		case <-time.After(time.Second):
+			fmt.Println(format.SampleRate.D(streamer.Position()).Round(time.Second))
+		}
+
+	}
+}
+
 func Play(fp string) {
 	f, err := os.Open(fp)
 	if err != nil {
@@ -25,7 +35,11 @@ func Play(fp string) {
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
 	ctrl := &beep.Ctrl{Streamer: beep.Loop(-1, streamer), Paused: false}
-	speaker.Play(ctrl)
+	speaker.Play(ctrl, beep.Callback(func() {
+		go printTime(streamer, format)
+	}))
+
+	fmt.Println(format.SampleRate.D(streamer.Len()).Round(time.Second))
 
 	fmt.Print("Press any key to pause/resume. ")
 	for {
